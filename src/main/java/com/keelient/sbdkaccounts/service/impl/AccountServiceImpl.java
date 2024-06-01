@@ -5,6 +5,7 @@ import com.keelient.sbdkaccounts.dto.CustomerDto;
 import com.keelient.sbdkaccounts.entity.Accounts;
 import com.keelient.sbdkaccounts.entity.Customer;
 import com.keelient.sbdkaccounts.exception.CustomerAlreadyExistsException;
+import com.keelient.sbdkaccounts.exception.ResourceNotFoundException;
 import com.keelient.sbdkaccounts.mapper.CustomerMapper;
 import com.keelient.sbdkaccounts.repository.AccountsRepository;
 import com.keelient.sbdkaccounts.repository.CustomerRepository;
@@ -51,5 +52,16 @@ public class AccountServiceImpl implements IAccountService {
         return newAccount;
     }
 
-
+    @Override
+    public CustomerDto fetchAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(
+                () -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString())
+        );
+        CustomerDto customerDto = CustomerMapper.mapToCustomerDto(customer, new CustomerDto());
+        customerDto.setAccounts(accounts);
+        return customerDto;
+    }
 }
